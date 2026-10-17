@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Anvil: An IDE Where the Engineer Designs and the AI Types</title>
+<style>
+  :root {
+    --bg: #fbfaf8; --fg: #1c1b19; --muted: #6b6860; --line: #e3e0d9;
+    --accent: #b4491f; --card: #f2efe9; --code-bg: #1e1d1b; --code-fg: #ece8df;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #161513; --fg: #e9e5dc; --muted: #9a958a; --line: #2e2c28;
+            --accent: #e0805a; --card: #1f1d1a; --code-bg: #0f0e0d; --code-fg: #ece8df; }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--fg);
+         font: 17px/1.7 Georgia, "Times New Roman", serif; }
+  .wrap { max-width: 780px; margin: 0 auto; padding: 56px 20px 96px; }
+  header { border-bottom: 2px solid var(--fg); padding-bottom: 28px; margin-bottom: 32px; }
+  .eyebrow { font: 600 12px/1 system-ui, sans-serif; letter-spacing: .14em;
+             text-transform: uppercase; color: var(--accent); }
+  h1 { font-size: 2.3rem; line-height: 1.15; margin: 14px 0 10px; letter-spacing: -.01em; }
+  .sub { color: var(--muted); font-style: italic; margin: 0; }
+  .meta { font: 13px system-ui, sans-serif; color: var(--muted); margin-top: 16px; }
+  h2 { font-size: 1.5rem; margin: 52px 0 8px; padding-top: 8px; border-top: 1px solid var(--line); }
+  h2 .n { font: 600 .8rem system-ui, sans-serif; color: var(--accent); margin-right: 10px; letter-spacing: .08em; }
+  h3 { font: 600 1.05rem system-ui, sans-serif; margin: 28px 0 4px; }
+  p { margin: 12px 0; }
+  ul, ol { padding-left: 1.3em; }
+  li { margin: 6px 0; }
+  code { font: .88em ui-monospace, SFMono-Regular, Menlo, monospace;
+         background: var(--card); padding: 1px 6px; border-radius: 4px; }
+  pre { background: var(--code-bg); color: var(--code-fg); padding: 16px 18px; border-radius: 8px;
+        overflow-x: auto; font: 13.5px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace; }
+  pre code { background: none; padding: 0; }
+  .callout { background: var(--card); border-left: 4px solid var(--accent);
+             padding: 14px 18px; border-radius: 0 8px 8px 0; margin: 20px 0; }
+  .callout strong { font-family: system-ui, sans-serif; }
+  table { width: 100%; border-collapse: collapse; margin: 20px 0; font: 14.5px/1.5 system-ui, sans-serif; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .scroll { overflow-x: auto; }
+  nav { background: var(--card); border-radius: 8px; padding: 16px 22px; margin: 0 0 8px;
+        font: 14.5px/1.9 system-ui, sans-serif; }
+  nav a { color: var(--fg); text-decoration: none; }
+  nav a:hover { color: var(--accent); }
+  nav ol { margin: 6px 0 0; columns: 2; column-gap: 32px; }
+  .diagram { background: var(--card); border-radius: 8px; padding: 18px; margin: 22px 0;
+             font: 13px/1.5 ui-monospace, Menlo, monospace; overflow-x: auto; white-space: pre; }
+  footer { margin-top: 64px; padding-top: 16px; border-top: 1px solid var(--line);
+           font: 13px system-ui, sans-serif; color: var(--muted); }
+  @media (max-width: 600px) { h1 { font-size: 1.8rem; } nav ol { columns: 1; } }
+  @media print { body { background: #fff; color: #000; } nav { display: none; } pre, .diagram { white-space: pre-wrap; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">Technical Whitepaper &middot; v0.1 Draft</div>
+  <h1>Anvil: An IDE Where the Engineer Designs and the AI Types</h1>
+  <p class="sub">A VS Code fork for experienced developers who want AI leverage without surrendering architectural control. (Anvil is a working title.)</p>
+  <div class="meta">Author: Prateek Hajare &middot; October 2026 &middot; Status: concept and build plan</div>
+</header>
+
+<nav>
+  <strong>Contents</strong>
+  <ol>
+    <li><a href="#abstract">Abstract</a></li>
+    <li><a href="#problem">The problem</a></li>
+    <li><a href="#principles">Design principles</a></li>
+    <li><a href="#interaction">Interaction model</a></li>
+    <li><a href="#architecture">System architecture</a></li>
+    <li><a href="#context">The context engine</a></li>
+    <li><a href="#constraints">Enforcing restraint</a></li>
+    <li><a href="#stack">Technology stack</a></li>
+    <li><a href="#build">How to build it</a></li>
+    <li><a href="#fork">Living with a fork</a></li>
+    <li><a href="#eval">Measuring success</a></li>
+    <li><a href="#risks">Risks and open questions</a></li>
+    <li><a href="#nongoals">Non-goals</a></li>
+  </ol>
+</nav>
+
+<h2 id="abstract"><span class="n">01</span>Abstract</h2>
+<p>Current AI coding tools push toward delegation: describe a feature, receive hundreds of lines, review what you can. That workflow suits prototyping. It is a poor fit for engineers who own a system, hold its architecture in their heads, and are accountable for every line that ships.</p>
+<p>Anvil inverts the relationship. <strong>The engineer designs every part of the program. The AI performs only the typing.</strong> It does not propose unrequested code, does not plan on the engineer's behalf, and does not produce output larger than what was asked for. Interaction happens inline, at the cursor, in two modes: a <em>command</em> mode that makes a small, scoped edit and stops, and a <em>query</em> mode that answers questions and never touches the file.</p>
+<p>The goal is not a better model. It is a better contract between developer and model, one that makes guesswork in a project close to negligible while still using AI heavily.</p>
+
+<h2 id="problem"><span class="n">02</span>The problem</h2>
+<h3>Where today's tools fall short for experienced engineers</h3>
+<ul>
+  <li><strong>Unsolicited suggestions.</strong> Ghost-text completion interrupts thought. The engineer must read and reject code they never asked for, which costs attention even when the suggestion is wrong.</li>
+  <li><strong>Prompt-and-select workflows.</strong> Highlighting code, opening a side panel and writing a paragraph breaks flow and invites the model to rewrite more than intended.</li>
+  <li><strong>Large, hard-to-review diffs.</strong> A model that returns fifty lines for a ten-line request makes review slower than writing the code by hand.</li>
+  <li><strong>Weak grounding.</strong> Models guess at types, signatures and conventions when they are given loose text context. Guessing produces plausible but wrong code.</li>
+  <li><strong>Eroded ownership.</strong> When the AI decides structure, the engineer stops being the author of the design, and the codebase drifts from any single coherent mind.</li>
+</ul>
+
+<h2 id="principles"><span class="n">03</span>Design principles</h2>
+<ol>
+  <li><strong>The engineer is the architect.</strong> The tool never decides structure, naming strategy, or module boundaries unless asked a specific question about them.</li>
+  <li><strong>Silence by default.</strong> No ghost text, no popups, no proactive suggestions. The AI speaks only when invoked.</li>
+  <li><strong>Small, scoped, then sleep.</strong> Every command produces the minimum edit that satisfies the request, shows it, and stops.</li>
+  <li><strong>Ground in facts, not vibes.</strong> Context comes from the language server and syntax tree: real types, real signatures, real call sites.</li>
+  <li><strong>Edits and answers never mix.</strong> A question cannot modify code. A command cannot start a conversation.</li>
+  <li><strong>Everything is reversible in one step.</strong> One generation is one undo.</li>
+  <li><strong>Model-agnostic.</strong> The value is in the interaction and context layers, not in any particular model.</li>
+</ol>
+
+<h2 id="interaction"><span class="n">04</span>Interaction model</h2>
+<p>All interaction happens inline, in the editor, at the line being worked on. There is no chat sidebar in the primary workflow.</p>
+
+<h3>Command mode (edit)</h3>
+<p>The engineer types a command sentinel and presses Enter. An input box opens in place of that line. They describe a small, specific change in plain language. The model returns a scoped edit, the editor applies it, and the input closes.</p>
+<pre><code>// cursor on an empty line inside handleEvent()
+%^&amp;  &larr; Enter
+&#9474; switch on event.kind, one case per EventKind variant, call dispatch(event, ctx) in each &#9474;
+
+// result: one block, exactly where the cursor was, then the tool goes quiet
+switch (event.kind) {
+  case EventKind.Open:  dispatch(event, ctx); break;
+  case EventKind.Close: dispatch(event, ctx); break;
+  case EventKind.Error: dispatch(event, ctx); break;
+}</code></pre>
+
+<h3>Query mode (ask)</h3>
+<p>A second sentinel opens the same inline box, but in conversational mode. The engineer can ask what a function does, why an API behaves a certain way, or what the tradeoffs of an approach are. The answer renders inline or in a transient peek view. <strong>No edit is ever applied in this mode.</strong></p>
+<pre><code>$%#  &larr; Enter
+&#9474; why does this retry loop not back off on 429? &#9474;</code></pre>
+
+<h3>Sentinels</h3>
+<p>The default sentinels (<code>%^&amp;</code> for command, <code>$%#</code> for query) are fully configurable. They are intercepted by the editor's input handler and removed from the buffer the moment they are recognised, so they never appear in the saved file. Some sequences collide with real syntax in certain languages (shell and Perl use <code>$%#</code> constructs), so Anvil also supports dedicated keybindings as an alternative, and sentinel recognition can be limited to an otherwise empty line or comment context.</p>
+
+<div class="callout">
+  <strong>Rule of the contract:</strong> the engineer states <em>what</em> and <em>where</em>; the AI supplies only the <em>keystrokes</em>. If a request implies a larger design decision, the tool asks or declines rather than deciding.
+</div>
+
+<h2 id="architecture"><span class="n">05</span>System architecture</h2>
+<div class="diagram">+-----------------------------------------------------------+
+|                    Anvil (VS Code fork)                   |
+|                                                           |
+|  Editor core (Monaco)                                     |
+|    |-- Sentinel interceptor  (type handler / keybinding)  |
+|    |-- Inline prompt widget  (content widget at cursor)   |
+|    |-- Edit applier          (single undo stop, diff)     |
+|    '-- Inline suggestions    (DISABLED / removed)         |
+|                                                           |
+|  Anvil service (built-in, part of the IDE itself)         |
+|    |-- Mode router           (command vs query)           |
+|    |-- Context engine        (LSP + tree-sitter + index)  |
+|    |-- Constraint layer      (scope, size, schema checks) |
+|    '-- Model gateway         (provider adapters)          |
++---------------------------|-------------------------------+
+                            v
+        Hosted model API  /  local model (Ollama, llama.cpp)</div>
+
+<p>The flow for a command is: intercept sentinel, capture cursor position and typed instruction, resolve referenced symbols through the context engine, build a narrow prompt, request a structured edit from the model, validate it against the constraint layer, and apply it as one undoable operation.</p>
+
+<h2 id="context"><span class="n">06</span>The context engine</h2>
+<p>This is where "negligible guesswork" is won or lost. A small instruction only works if the model is handed exact facts about every symbol the instruction mentions.</p>
+
+<h3>What gets gathered</h3>
+<ul>
+  <li><strong>Enclosing scope:</strong> the function or block at the cursor, the local variables in scope and their inferred types.</li>
+  <li><strong>Mentioned symbols:</strong> any identifier in the instruction is resolved through the language server to its definition: signature, type, doc comment, and a few representative call sites.</li>
+  <li><strong>Local conventions:</strong> neighbouring code in the same file for naming, error handling and formatting style.</li>
+  <li><strong>Project rules:</strong> an optional <code>.anvil/rules.md</code> where the team states hard conventions, read on every request.</li>
+</ul>
+
+<h3>How it is gathered</h3>
+<table>
+  <tr><th>Source</th><th>Provides</th><th>Mechanism</th></tr>
+  <tr><td>Language server</td><td>Definitions, types, signatures, references, diagnostics</td><td>VS Code language-feature commands such as <code>vscode.executeDefinitionProvider</code>, <code>executeHoverProvider</code>, <code>executeReferenceProvider</code></td></tr>
+  <tr><td>Syntax tree</td><td>Exact scope boundaries, statement and block ranges</td><td>tree-sitter (WASM), for an error-tolerant parse of incomplete code</td></tr>
+  <tr><td>Project index (later)</td><td>Cross-file symbol lookup when the LSP is slow or absent</td><td>Local symbol index built from tree-sitter tags queries</td></tr>
+  <tr><td>Rules file</td><td>Team conventions</td><td>Plain markdown read from the workspace</td></tr>
+</table>
+<p>The prompt contains only what the instruction needs. Smaller, more precise context also means lower cost, lower latency and fewer opportunities for the model to wander.</p>
+
+<h2 id="constraints"><span class="n">07</span>Enforcing restraint</h2>
+<p>"Generate it and go to sleep" cannot depend on a polite system prompt. It has to be enforced in code, around the model.</p>
+<ul>
+  <li><strong>Structured output.</strong> The model must return an edit object, not free text. Example shape: <code>{ "range": ..., "replacement": "...", "needs_clarification": false }</code>. Anything that does not parse is rejected.</li>
+  <li><strong>Scope lock.</strong> The edit may only touch the range at the cursor, or the selection or block it was invoked on. Edits outside that range are discarded.</li>
+  <li><strong>Size budget.</strong> A configurable cap on lines and tokens. If the model exceeds it, the edit is refused and the engineer is told the request is too large for this mode, rather than being shown a huge diff.</li>
+  <li><strong>Clarify, don't guess.</strong> If a referenced symbol cannot be resolved or the instruction is ambiguous, the model returns <code>needs_clarification</code> with one short question instead of inventing an answer.</li>
+  <li><strong>Post-edit checks.</strong> After applying, wait for diagnostics from the language server. New errors on the edited range can be surfaced immediately, so the engineer finds out about hallucinated symbols in seconds.</li>
+  <li><strong>One undo step.</strong> The edit is applied as a single operation with undo stops on both sides, so one keystroke reverts it.</li>
+  <li><strong>Mode isolation.</strong> Query mode is not given any edit capability at all; command mode is not given a conversational channel.</li>
+</ul>
+
+<h2 id="stack"><span class="n">08</span>Technology stack</h2>
+<div class="scroll">
+<table>
+  <tr><th>Layer</th><th>Choice</th><th>Why</th></tr>
+  <tr><td>Base</td><td>VS Code open-source repository (Code - OSS, MIT-licensed)</td><td>Mature editor, LSP ecosystem, familiar to the target users</td></tr>
+  <tr><td>Language</td><td>TypeScript</td><td>VS Code is written in it; the fork and extension APIs are TypeScript-native</td></tr>
+  <tr><td>Shell</td><td>Electron (inherited)</td><td>Comes with the fork; no new runtime to maintain</td></tr>
+  <tr><td>Editor widgets</td><td>Monaco editor internals: content widgets, view zones, type handlers</td><td>Needed for the in-line prompt box and sentinel interception</td></tr>
+  <tr><td>Parsing</td><td>tree-sitter via web-tree-sitter (WASM)</td><td>Fast, error-tolerant, language-agnostic scope detection</td></tr>
+  <tr><td>Code intelligence</td><td>Existing language servers through VS Code's language features</td><td>Real types and definitions with no extra infrastructure</td></tr>
+  <tr><td>Model gateway</td><td>Thin adapter layer: Anthropic API, OpenAI-compatible endpoints, local runners (Ollama, llama.cpp)</td><td>Bring-your-own-key and fully local options without lock-in</td></tr>
+  <tr><td>Structured output</td><td>Tool-use or JSON-schema responses with validation (for example Zod)</td><td>Makes the edit contract machine-checkable</td></tr>
+  <tr><td>Extensions</td><td>Open VSX registry</td><td>Forks cannot use Microsoft's Marketplace under its terms</td></tr>
+  <tr><td>Config</td><td><code>settings.json</code> plus <code>.anvil/rules.md</code></td><td>Familiar, versionable with the project</td></tr>
+  <tr><td>Build and CI</td><td>VS Code's gulp build, GitHub Actions, per-OS runners</td><td>Matches upstream's own build path</td></tr>
+  <tr><td>Telemetry</td><td>None by default</td><td>Target users care about privacy; strip upstream telemetry in the fork's <code>product.json</code></td></tr>
+</table>
+</div>
+
+<h2 id="build"><span class="n">09</span>How to build it</h2>
+<p>Anvil is built as a standalone IDE from the first commit. There is no extension stage: the prototype is an early build of the product itself, so what gets tested is the real thing, running in its own environment.</p>
+
+<h3>Phase 0: Fork skeleton (1 to 2 weeks)</h3>
+<ul>
+  <li>Fork <code>microsoft/vscode</code>, build it from source, and get a branded dev build running on your machine.</li>
+  <li>Edit <code>product.json</code>: name, application and data-folder identifiers, extension gallery pointed at Open VSX, telemetry endpoints removed.</li>
+  <li>Give the build its own user-data and extensions directories so it never reads or modifies an existing VS Code setup.</li>
+  <li>Keep your changes isolated in a few clearly named directories to ease future rebases.</li>
+</ul>
+
+<h3>Phase 1: Thin prototype inside the fork (2 to 3 weeks)</h3>
+<ul>
+  <li>Implement the smallest end-to-end slice of command mode: intercept the sentinel in the editor, remove it from the buffer, open a basic inline input, send the instruction plus the enclosing function to one model provider, and apply the returned edit.</li>
+  <li>Turn off inline suggestions in the default configuration (<code>"editor.inlineSuggest.enabled": false</code>) for now; Phase 2 removes the feature properly.</li>
+  <li>Rough edges are fine here. The point is to dogfood the loop on a real project for a week, because if the interaction does not feel better than what you use today, that is what needs fixing before anything else.</li>
+</ul>
+
+<h3>Phase 2: Polished native inline prompt (3 to 5 weeks)</h3>
+<ul>
+  <li>Implement the sentinel interceptor at the editor level (type handler) so it is instant and does not flicker the buffer.</li>
+  <li>Build the inline input as a Monaco content widget or view zone, with proper focus handling, Escape to cancel, and Enter to submit.</li>
+  <li>Remove or compile out the inline-suggestion contribution so ghost text cannot be re-enabled by accident.</li>
+</ul>
+
+<h3>Phase 3: Context engine (4 to 6 weeks)</h3>
+<ul>
+  <li>Integrate web-tree-sitter for the main target languages first (pick two or three, not twenty).</li>
+  <li>Implement symbol resolution through language-feature commands, with caching and timeouts so a slow server never blocks the editor.</li>
+  <li>Add the rules-file loader and a context budget so prompts stay small.</li>
+</ul>
+
+<h3>Phase 4: Constraint layer (2 to 3 weeks)</h3>
+<ul>
+  <li>Define the edit schema and validator, the scope lock and the size budget.</li>
+  <li>Implement clarification responses and post-edit diagnostics checks.</li>
+  <li>Make each generation a single undo operation.</li>
+</ul>
+
+<h3>Phase 5: Query mode (2 to 3 weeks)</h3>
+<ul>
+  <li>Same inline box, separate pipeline with read-only context and no edit capability.</li>
+  <li>Render answers inline or in a peek view; allow follow-up questions in the same box.</li>
+</ul>
+
+<h3>Phase 6: Hardening and release</h3>
+<ul>
+  <li>Provider adapters for hosted and local models, keychain-based key storage, offline behaviour.</li>
+  <li>Signed installers for Windows, macOS and Linux, plus an update channel.</li>
+  <li>Logging that is local only and opt-in; documentation aimed at engineers, not beginners.</li>
+</ul>
+
+<div class="callout">
+  <strong>Realistic scope:</strong> one engineer can reach a usable alpha in roughly four to six months of focused work. Most of the effort goes into the context engine and the editor integration, not the model calls.
+</div>
+
+<h2 id="fork"><span class="n">10</span>Living with a fork</h2>
+<ul>
+  <li><strong>Rebasing.</strong> VS Code ships monthly. Keep your patch set small and well-isolated, and track upstream on a regular schedule instead of letting the gap grow.</li>
+  <li><strong>Licensing.</strong> The source repository is MIT-licensed, but Microsoft's distributed "Visual Studio Code" binary carries a separate licence, and its Marketplace and some proprietary components (certain remote-development and C# tooling) are restricted. Build from source, use your own name and branding, and use Open VSX. Have the specifics reviewed before a public release.</li>
+  <li><strong>Extension compatibility.</strong> Most extensions work on Open VSX, but some popular ones are Marketplace-only. Check the ones your users depend on.</li>
+  <li><strong>Isolation from existing setups.</strong> Anvil installs and runs separately, with its own settings, extensions and data folders. Developers keep their existing VS Code environments untouched and can trial Anvil alongside them. A one-time import of settings, keybindings and a chosen set of extensions can be offered as a convenience.</li>
+</ul>
+
+<h2 id="eval"><span class="n">11</span>Measuring success</h2>
+<table>
+  <tr><th>Metric</th><th>Meaning</th></tr>
+  <tr><td>First-try acceptance rate</td><td>Share of command-mode edits kept without modification</td></tr>
+  <tr><td>Undo rate</td><td>Share of edits immediately reverted; a direct signal of wasted attention</td></tr>
+  <tr><td>Median edit size</td><td>Should stay small; growth means the restraint layer is leaking</td></tr>
+  <tr><td>Hallucinated-symbol rate</td><td>Edits that introduce unresolved identifiers, caught by diagnostics</td></tr>
+  <tr><td>Time to result</td><td>Keystroke to applied edit; target is a couple of seconds</td></tr>
+  <tr><td>Interruptions per hour</td><td>Should be zero; the tool never speaks unprompted</td></tr>
+</table>
+<p>Build a small replayable benchmark from real instructions in real repositories early, so that changes to prompts, context rules or models can be compared objectively.</p>
+
+<h2 id="risks"><span class="n">12</span>Risks and open questions</h2>
+<ul>
+  <li><strong>Latency.</strong> Inline flow dies if results take ten seconds. Small context and small outputs help; a fast model tier may be needed for command mode.</li>
+  <li><strong>Language server quality varies.</strong> Dynamic languages give weaker type information. Tree-sitter and call-site examples partly compensate.</li>
+  <li><strong>Sentinel ergonomics.</strong> Typed sentinels might feel clumsy compared with a single hotkey. Test both with real users.</li>
+  <li><strong>Where the line sits.</strong> The boundary between "typing" and "designing" will need tuning. Too strict is frustrating; too loose recreates the problem.</li>
+  <li><strong>Market size.</strong> The target audience is narrow by design. That is acceptable for a project of this kind, but it shapes how it should be funded and distributed.</li>
+  <li><strong>Privacy expectations.</strong> Sending code to a hosted API is a real concern for some teams. A local-model path should be a first-class option, not an afterthought.</li>
+</ul>
+
+<h2 id="nongoals"><span class="n">13</span>Non-goals</h2>
+<ul>
+  <li>Training or hosting a frontier model.</li>
+  <li>Autonomous multi-file agents that plan and execute features on their own.</li>
+  <li>Ghost-text autocomplete in any form.</li>
+  <li>Serving beginners or "describe an app and get an app" workflows.</li>
+  <li>Replacing the engineer's judgement about architecture.</li>
+</ul>
+
+<footer>
+  Anvil whitepaper v0.1. A living document: expect the stack, scope and phase estimates to change as the first working prototype teaches what the real constraints are.
+</footer>
+
+</div>
+</body>
+</html>
